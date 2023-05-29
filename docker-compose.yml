@@ -1,0 +1,38 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: 'postgres:14.8'
+    ports:
+      - "5432:5432"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data/
+  frontend:
+    depends_on:
+      - postgres
+    build:
+      context: "./front-end"
+    restart: always
+    ports:
+      - "80:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+  broker-service:
+    depends_on:
+        - postgres
+    build:
+      context: "./broker-service"
+    restart: always
+    ports:
+      - "3000:3000"
+    deploy:
+      mode: replicated
+      replicas: 1

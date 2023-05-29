@@ -1,29 +1,12 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/cors"
+	"broker-service/cmd/api/handlers"
 )
 
-func routes() http.Handler {
-	mux := chi.NewRouter()
+func initRoutes(app *AppConfig) {
 
-	// specify who is allowed to connect
-	mux.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300,
-	}))
+	mux := app.router
 
-	mux.Use(middleware.Heartbeat("/ping"))
-
-	mux.Post("/", app.Broker)
-
-	return mux
+	mux.Post("/", handlers.BrokerMain)
 }
