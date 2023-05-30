@@ -9,4 +9,5 @@ func initRoutes(app *AppConfig) {
 	mux := app.router
 
 	mux.Post("/", handlers.BrokerMain)
+	mux.Post("/route", handlers.RouteRequest)
 }

@@ -1,22 +1,21 @@
 version: "3.7"
 
 services:
-  postgres:
-    image: 'postgres:14.8'
+  db:
+    image: 'postgres:14.2'
     ports:
-      - "5432:5432"
+      - "5436:5432"
     deploy:
       mode: replicated
       replicas: 1
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: users
+      POSTGRES_PASSWORD: secret
     volumes:
-      - ./db-data/postgres/:/var/lib/postgresql/data/
+      - postgres-db:/var/lib/postgresql/data/
   frontend:
     depends_on:
-      - postgres
+      - db
     build:
       context: "./front-end"
     restart: always
@@ -27,7 +26,7 @@ services:
       replicas: 1
   broker-service:
     depends_on:
-        - postgres
+        - db
     build:
       context: "./broker-service"
     restart: always
@@ -36,3 +35,20 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+  auth-service:
+    depends_on:
+        - db
+    build:
+      context: "./auth-service"
+    restart: always
+    ports:
+      - "3001:3001"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DATABASE_URL: postgres://postgres:secret@db:5432/postgres?sslmode=disable
+
+volumes:
+  postgres-db:
+    driver: local
