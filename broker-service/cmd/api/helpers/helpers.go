@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -13,6 +13,15 @@ type JsonResponse struct {
 	Err     bool   `json:"error"`
 	Message string `json:"message"`
 	Data    any    `json:"data,omitempty"`
+}
+
+func DecodeJSON(src io.Reader, v any) error {
+	err := json.NewDecoder(src).Decode(v)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func WriteJSON(w http.ResponseWriter, data *JsonResponse, status ...int) error {
@@ -94,17 +103,18 @@ func CallModule(w http.ResponseWriter, info *types.MethodCallInfo) {
 
 	defer response.Body.Close()
 
-	body, _ = ioutil.ReadAll(response.Body)
+	var result types.JsonResponse
+
+	err = DecodeJSON(response.Body, &result)
+	if err != nil {
+		fmt.Println(err)
+		ErrJson(w, "Failed to parse service response", http.StatusBadRequest)
+		return
+	}
 
 	if response.StatusCode >= 400 {
 		ErrJson(w, string(body), response.StatusCode)
 		return
-	}
-
-	result := types.JsonResponse{
-		Err:     false,
-		Message: "Success",
-		Data:    string(body),
 	}
 
 	WriteJSON(w, (*JsonResponse)(&result))
