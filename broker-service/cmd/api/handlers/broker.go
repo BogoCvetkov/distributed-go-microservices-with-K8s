@@ -48,7 +48,7 @@ func authenticate(w http.ResponseWriter, r *http.Request, data *types.RouteReque
 
 	dataMap, ok := data.Payload.(map[string]any)
 	if !ok {
-		helpers.ErrJson(w, "Payload field not a map")
+		helpers.ErrJson(w, "payload field not a map")
 		return
 	}
 

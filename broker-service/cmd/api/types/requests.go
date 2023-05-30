@@ -8,7 +8,7 @@ type JsonResponse struct {
 
 type RouteRequestBody struct {
 	Action  string `json:"action"`
-	Payload any    `json:"data,omitempty"`
+	Payload any    `json:"payload,omitempty"`
 }
 
 type MethodCallInfo struct {
