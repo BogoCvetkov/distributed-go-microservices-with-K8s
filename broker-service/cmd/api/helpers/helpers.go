@@ -111,6 +111,7 @@ func CallModule(w http.ResponseWriter, info *types.MethodCallInfo) {
 		ErrJson(w, "Failed to parse service response", http.StatusBadRequest)
 		return
 	}
+	fmt.Println(response.StatusCode, result)
 
 	if response.StatusCode >= 400 {
 		ErrJson(w, string(body), response.StatusCode)

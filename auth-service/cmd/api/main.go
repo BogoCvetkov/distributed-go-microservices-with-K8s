@@ -43,7 +43,7 @@ func main() {
 	err := srv.ListenAndServe()
 
 	if err != nil {
-		fmt.Println("Failed to start broker-service")
+		fmt.Println("Failed to start auth-service")
 		log.Panic(err)
 	}
 }

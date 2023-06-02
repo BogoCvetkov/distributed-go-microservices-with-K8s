@@ -13,6 +13,26 @@ services:
       POSTGRES_PASSWORD: secret
     volumes:
       - postgres-db:/var/lib/postgresql/data/
+
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    volumes:
+      - mongo-db:/data/db
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: secret
+      ME_CONFIG_MONGODB_URL: mongodb://root:secret@mongo:27017/
+
   frontend:
     depends_on:
       - db
@@ -24,6 +44,7 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+
   broker-service:
     depends_on:
         - db
@@ -35,6 +56,7 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+       
   auth-service:
     depends_on:
         - db
@@ -49,6 +71,22 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:secret@db:5432/postgres?sslmode=disable
 
+  logger-service:
+    depends_on:
+        - mongo
+    build:
+      context: "./logger-service"
+    restart: always
+    ports:
+      - "3002:3002"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      MONGO_URL: mongodb://root:secret@mongo:27017/
+
 volumes:
   postgres-db:
+    driver: local
+  mongo-db:
     driver: local

@@ -3,8 +3,11 @@ package handlers
 import (
 	"auth-service/cmd/api/config"
 	"auth-service/cmd/api/helpers"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type jsonResponse struct {
@@ -41,11 +44,51 @@ func Authenticate(app *config.AppConfig) http.HandlerFunc {
 			return
 		}
 
+		err = logRequest("User Logged", fmt.Sprintf("%s %s has logged in at %v", user.FirstName, user.LastName, time.Now()))
+
+		if err != nil {
+			fmt.Println("Failed to log user login")
+		}
+
 		payload := helpers.JsonResponse{
+			Err:     false,
 			Message: "Authentication Success",
 			Data:    user,
 		}
 
 		helpers.WriteJSON(w, &payload)
 	}
+}
+
+func logRequest(name string, data string) error {
+	var entry struct {
+		Name string `json:"event_name"`
+		Data string `json:"data"`
+	}
+
+	entry.Name = name
+	entry.Data = data
+
+	jsonData, err := json.Marshal(entry)
+
+	if err != nil {
+		return err
+	}
+
+	url := "http://logger-service:3002/create-log"
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	_, err = client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
