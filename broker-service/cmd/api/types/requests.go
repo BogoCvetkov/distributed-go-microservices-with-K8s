@@ -16,3 +16,9 @@ type MethodCallInfo struct {
 	Endpoint string
 	Body     interface{}
 }
+
+type RabbitPayload struct {
+	Endpoint string `endpoint:"endpoint"`
+	Method   string `endpoint:"method"`
+	Data     any    `json:"data,omitempty"`
+}

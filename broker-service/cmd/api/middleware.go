@@ -1,13 +1,15 @@
 package main
 
 import (
+	"broker-service/cmd/api/config"
+
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 )
 
-func initMiddlewares(app *AppConfig) {
+func initMiddlewares(app *config.AppConfig) {
 
-	mux := app.router
+	mux := app.Router
 
 	// specify who is allowed to connect
 	mux.Use(cors.Handler(cors.Options{

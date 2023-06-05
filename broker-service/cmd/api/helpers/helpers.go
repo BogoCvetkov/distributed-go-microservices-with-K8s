@@ -1,12 +1,15 @@
 package helpers
 
 import (
+	"broker-service/cmd/api/config"
 	"broker-service/cmd/api/types"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type JsonResponse struct {
@@ -120,4 +123,65 @@ func CallModule(w http.ResponseWriter, info *types.MethodCallInfo) {
 
 	WriteJSON(w, (*JsonResponse)(&result))
 
+}
+
+// RAbbitMQ helpers
+
+func PrepareRabbitConn(app *config.AppConfig) error {
+
+	ch, err := app.RabbitConn.Channel()
+
+	if err != nil {
+		return err
+	}
+
+	q, err := declareQueue(ch)
+
+	if err != nil {
+		return err
+	}
+
+	app.RabbitChannel = ch
+	app.RabbitQueue = q
+
+	return nil
+
+}
+
+func declareQueue(ch *amqp.Channel) (*amqp.Queue, error) {
+	err := ch.ExchangeDeclare(
+		"micro_exchange", // name
+		"direct",         // type
+		true,             // durable
+		false,            // auto-deleted
+		false,            // internal
+		false,            // no-wait
+		nil,              // arguments
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	q, err := ch.QueueDeclare(
+		"emails", // name
+		false,    // durable
+		false,    // delete when unused
+		false,    // exclusive
+		false,    // no-wait
+		nil,      // arguments
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = ch.QueueBind(
+		q.Name,           // queue name
+		"message",        // routing key
+		"micro_exchange", // exchange
+		false,
+		nil)
+
+	return &q, nil
 }

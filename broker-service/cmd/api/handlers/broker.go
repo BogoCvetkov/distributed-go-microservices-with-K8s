@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"broker-service/cmd/api/config"
 	"broker-service/cmd/api/helpers"
 	"broker-service/cmd/api/types"
 	"fmt"
@@ -18,26 +19,32 @@ func BrokerMain(w http.ResponseWriter, r *http.Request) {
 }
 
 // Used to route requests to the different micro-services
-func RouteRequest(w http.ResponseWriter, r *http.Request) {
-	var payload types.RouteRequestBody
+func RouteRequest(app *config.AppConfig) http.HandlerFunc {
 
-	err := helpers.ParseJSON(w, r, &payload)
+	return func(w http.ResponseWriter, r *http.Request) {
+		var payload types.RouteRequestBody
 
-	if err != nil {
-		helpers.ErrJson(w, fmt.Sprintf("Failed parsing JSON - %s", err))
-		return
-	}
+		err := helpers.ParseJSON(w, r, &payload)
 
-	switch payload.Action {
-	case "auth":
-		authenticate(w, r, &payload)
-		return
-	case "log":
-		log(w, r, &payload)
-		return
-	default:
-		helpers.ErrJson(w, "Unrecognized action")
-		return
+		if err != nil {
+			helpers.ErrJson(w, fmt.Sprintf("Failed parsing JSON - %s", err))
+			return
+		}
+
+		switch payload.Action {
+		case "auth":
+			authenticate(w, r, &payload)
+			return
+		case "log":
+			log(w, r, &payload)
+			return
+		case "send":
+			send(w, r, &payload, app)
+			return
+		default:
+			helpers.ErrJson(w, "Unrecognized action")
+			return
+		}
 	}
 
 }
@@ -95,4 +102,44 @@ func log(w http.ResponseWriter, r *http.Request, data *types.RouteRequestBody) {
 	}
 
 	helpers.CallModule(w, &reqInfo)
+}
+
+func send(w http.ResponseWriter, r *http.Request, data *types.RouteRequestBody, app *config.AppConfig) {
+
+	type Data struct {
+		To      string `json:"to"`
+		Subject string `json:"subject"`
+		Message string `json:"message"`
+	}
+
+	dataMap, ok := data.Payload.(map[string]any)
+	if !ok {
+		helpers.ErrJson(w, "payload field not a map")
+		return
+	}
+
+	d := Data{
+		To:      dataMap["to"].(string),
+		Subject: dataMap["subject"].(string),
+		Message: dataMap["message"].(string),
+	}
+
+	payload := types.RabbitPayload{
+		Endpoint: "http://email-service:3003/send",
+		Method:   "POST",
+		Data:     d,
+	}
+
+	if err := app.SendToQueue(&payload); err != nil {
+		helpers.ErrJson(w, fmt.Sprintln(err))
+		return
+	}
+
+	res := helpers.JsonResponse{
+		Err:     false,
+		Message: "Message send to broker",
+	}
+
+	helpers.WriteJSON(w, &res)
+
 }
