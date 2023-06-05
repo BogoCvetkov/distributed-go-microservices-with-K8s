@@ -1,6 +1,17 @@
 version: "3.7"
 
 services:
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbit-driver:/var/lib/rabbitmq/
+      - rabbit-driver:/var/log/rabbitmq
+
   db:
     image: 'postgres:14.2'
     ports:
@@ -32,6 +43,14 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: secret
       ME_CONFIG_MONGODB_URL: mongodb://root:secret@mongo:27017/
+  
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
 
   frontend:
     depends_on:
@@ -56,6 +75,8 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    environment:
+      RABBIT_URL: amqp://guest:guest@rabbitmq:5672/
        
   auth-service:
     depends_on:
@@ -84,9 +105,42 @@ services:
       replicas: 1
     environment:
       MONGO_URL: mongodb://root:secret@mongo:27017/
+  
+  email-service:
+    build:
+      context: "./email-service"
+    restart: always
+    ports:
+      - "3003:3003"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      FROM_ADDR: bogo.dev@mail.bg
+      FROM_NAME: "Bogo Dev"
+      ENCRYTION: none
+      MAIL_DOMAIN: localhost
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+
+  listener-service:
+    depends_on:
+      - rabbitmq
+    build:
+      context: "./listener-service"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      RABBIT_URL: amqp://guest:guest@rabbitmq:5672/
 
 volumes:
   postgres-db:
     driver: local
   mongo-db:
+    driver: local
+  rabbit-driver:
     driver: local
