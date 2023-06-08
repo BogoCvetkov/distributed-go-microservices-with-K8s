@@ -40,7 +40,7 @@ type LogEntryUpdate struct {
 
 func (l *LogEntry) Insert(data *LogEntry) error {
 
-	collection := getCollection()
+	collection := GetCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -57,7 +57,7 @@ func (l *LogEntry) Insert(data *LogEntry) error {
 }
 
 func (l *LogEntry) GetAll() (*[]LogEntry, error) {
-	collection := getCollection()
+	collection := GetCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -89,7 +89,7 @@ func (l *LogEntry) GetAll() (*[]LogEntry, error) {
 }
 
 func (l *LogEntry) GetOne(id string) (*LogEntry, error) {
-	collection := getCollection()
+	collection := GetCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -113,7 +113,7 @@ func (l *LogEntry) GetOne(id string) (*LogEntry, error) {
 }
 
 func (l *LogEntry) Update(id string, data *LogEntryUpdate) (*mongo.UpdateResult, error) {
-	collection := getCollection()
+	collection := GetCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -139,7 +139,7 @@ func (l *LogEntry) Update(id string, data *LogEntryUpdate) (*mongo.UpdateResult,
 	return result, nil
 }
 
-func getCollection() *mongo.Collection {
+func GetCollection() *mongo.Collection {
 	collection := client.Database("go_microservices").Collection("logs")
 	return collection
 }

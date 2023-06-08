@@ -44,10 +44,12 @@ func Authenticate(app *config.AppConfig) http.HandlerFunc {
 			return
 		}
 
-		err = logRequest("User Logged", fmt.Sprintf("%s %s has logged in at %v", user.FirstName, user.LastName, time.Now()))
+		err = logRPC(app, "User Logged", fmt.Sprintf("RPC --> %s %s has logged in at %v", user.FirstName, user.LastName, time.Now()))
 
 		if err != nil {
-			fmt.Println("Failed to log user login")
+			fmt.Println(err)
+			helpers.ErrJson(w, fmt.Sprintln(err), http.StatusBadRequest)
+			return
 		}
 
 		payload := helpers.JsonResponse{
@@ -85,6 +87,31 @@ func logRequest(name string, data string) error {
 
 	client := &http.Client{}
 	_, err = client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func logRPC(app *config.AppConfig, name string, data string) error {
+
+	type RPCNewLog struct {
+		EventName string
+		Data      string
+	}
+
+	entry := RPCNewLog{
+		EventName: name,
+		Data:      data,
+	}
+
+	var reply jsonResponse
+
+	err := app.RPC.Call("RPCServer.LogEntry", entry, &reply)
+
+	fmt.Println(reply)
 
 	if err != nil {
 		return err

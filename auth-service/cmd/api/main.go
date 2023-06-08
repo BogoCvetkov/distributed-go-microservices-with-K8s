@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/rpc"
 	"os"
 	"time"
 
@@ -21,11 +22,17 @@ func main() {
 	// Connect to DB
 	conn := connDB()
 
+	// prepare the RPC client
+	client := initRPCClient()
+
+	defer client.Close()
+
 	// Define app
 	app := config.AppConfig{
 		Router: chi.NewRouter(),
 		DB:     conn,
 		Models: data.New(conn),
+		RPC:    client,
 	}
 
 	// Initialize Middlewares & Routes
@@ -71,4 +78,16 @@ func connDB() *pgx.Conn {
 		fmt.Printf("DB not ready, retrying after %v \n", wait)
 	}
 
+}
+
+func initRPCClient() *rpc.Client {
+	// Create a TCP connection to localhost on port 1234
+	client, err := rpc.Dial("tcp", "logger-service:5000")
+	if err != nil {
+		log.Fatal("Connection error: ", err)
+	}
+
+	fmt.Println("Connected to RPC Server")
+
+	return client
 }

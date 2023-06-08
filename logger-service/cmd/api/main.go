@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"log"
 	"logger-service/cmd/api/config"
+	"net"
 	"net/http"
+	"net/rpc"
 	"os"
 	"time"
 
 	data "logger-service/cmd/api/models"
+	rpc_server "logger-service/cmd/api/rpc"
 
 	"github.com/go-chi/chi"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,6 +21,7 @@ import (
 )
 
 const PORT = 3002
+const RPC_PORT = 5000
 
 func main() {
 
@@ -55,6 +59,9 @@ func main() {
 			Router,
 	}
 
+	// Initialize RPC server
+	go setupRPC()
+
 	err := srv.ListenAndServe()
 
 	if err != nil {
@@ -86,5 +93,40 @@ func connDB() *mongo.Client {
 	fmt.Println("Connected to MongoDB")
 
 	return client
+
+}
+
+func setupRPC() {
+	rs := new(rpc_server.RPCServer)
+
+	err := rpc.Register(rs)
+
+	if err != nil {
+		log.Fatal("Failed to register RPC type ", err)
+	}
+
+	tcpAddr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", RPC_PORT))
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	l, err := net.Listen("tcp", tcpAddr.String())
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Printf("Starting logger-service RPC in port %d \n", RPC_PORT)
+
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		fmt.Println("Spawning new conn")
+		go rpc.ServeConn(conn)
+	}
 
 }
