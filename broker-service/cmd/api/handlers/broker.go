@@ -2,10 +2,14 @@ package handlers
 
 import (
 	"broker-service/cmd/api/config"
+	email_proto "broker-service/cmd/api/email_proto"
 	"broker-service/cmd/api/helpers"
 	"broker-service/cmd/api/types"
 	"fmt"
 	"net/http"
+	"time"
+
+	"golang.org/x/net/context"
 )
 
 func BrokerMain(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +43,8 @@ func RouteRequest(app *config.AppConfig) http.HandlerFunc {
 			log(w, r, &payload)
 			return
 		case "send":
-			send(w, r, &payload, app)
+			// send(w, r, &payload, app)
+			sendgRPC(w, r, &payload, app)
 			return
 		default:
 			helpers.ErrJson(w, "Unrecognized action")
@@ -102,6 +107,46 @@ func log(w http.ResponseWriter, r *http.Request, data *types.RouteRequestBody) {
 	}
 
 	helpers.CallModule(w, &reqInfo)
+}
+
+func sendgRPC(w http.ResponseWriter, r *http.Request, data *types.RouteRequestBody, app *config.AppConfig) {
+	type Data struct {
+		To      string `json:"to"`
+		Subject string `json:"subject"`
+		Message string `json:"message"`
+	}
+
+	dataMap, ok := data.Payload.(map[string]any)
+	if !ok {
+		helpers.ErrJson(w, "payload field not a map")
+		return
+	}
+
+	gRequest := email_proto.EmailRequest{
+		Data: &email_proto.EmailData{
+			To:      dataMap["to"].(string),
+			Subject: dataMap["subject"].(string),
+			Message: dataMap["message"].(string),
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	gres, err := app.GClient.SendEmail(ctx, &gRequest)
+
+	if err != nil {
+		helpers.ErrJson(w, fmt.Sprintln(err))
+		return
+	}
+
+	res := helpers.JsonResponse{
+		Err:     false,
+		Message: gres.Message,
+	}
+
+	helpers.WriteJSON(w, &res)
+
 }
 
 func send(w http.ResponseWriter, r *http.Request, data *types.RouteRequestBody, app *config.AppConfig) {

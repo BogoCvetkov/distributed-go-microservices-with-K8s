@@ -1,6 +1,7 @@
 package config
 
 import (
+	email_proto "broker-service/cmd/api/email_proto"
 	"broker-service/cmd/api/types"
 	"encoding/json"
 
@@ -15,6 +16,7 @@ type AppConfig struct {
 	RabbitConn      *amqp.Connection
 	RabbitChannel   *amqp.Channel
 	RabbitQueue     *amqp.Queue
+	GClient         email_proto.EmailServiceClient
 }
 
 func (app AppConfig) SendToQueue(payload *types.RabbitPayload) error {

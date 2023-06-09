@@ -2,6 +2,7 @@ package main
 
 import (
 	"broker-service/cmd/api/config"
+	email_proto "broker-service/cmd/api/email_proto"
 	"broker-service/cmd/api/helpers"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/grpc"
 
 	"github.com/go-chi/chi"
 )
@@ -20,6 +22,10 @@ func main() {
 
 	// Connect to message broker
 	conn, err := connectRabbitMQ()
+	// Initialize gRPC client
+	gconn, gclient := initGrpcClient()
+
+	defer gconn.Close()
 
 	if err != nil {
 		fmt.Println("Failed to connect to RabbitMQ")
@@ -32,6 +38,7 @@ func main() {
 	app := config.AppConfig{
 		Router:     chi.NewRouter(),
 		RabbitConn: conn,
+		GClient:    gclient,
 	}
 
 	// Initialize Middlewares & Routes
@@ -84,4 +91,20 @@ func connectRabbitMQ() (*amqp.Connection, error) {
 
 	}
 
+}
+
+func initGrpcClient() (*grpc.ClientConn, email_proto.EmailServiceClient) {
+	var conn *grpc.ClientConn
+
+	conn, err := grpc.Dial(os.Getenv("EMAIL_GRPC"), grpc.WithInsecure())
+
+	if err != nil {
+		log.Fatalf("did not connect to EMAIL_GRPC Server: %s", err)
+	}
+
+	c := email_proto.NewEmailServiceClient(conn)
+
+	fmt.Println("GRPC CLient for EMAIL initialized")
+
+	return conn, c
 }
