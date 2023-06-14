@@ -100,6 +100,7 @@ func CallModule(w http.ResponseWriter, info *types.MethodCallInfo) {
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
+		fmt.Println(err)
 		ErrJson(w, fmt.Sprintf("Failed to call -->  %s", info.Endpoint))
 		return
 	}

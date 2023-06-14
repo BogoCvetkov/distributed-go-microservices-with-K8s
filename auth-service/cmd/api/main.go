@@ -82,7 +82,8 @@ func connDB() *pgx.Conn {
 
 func initRPCClient() *rpc.Client {
 	// Create a TCP connection to localhost on port 1234
-	client, err := rpc.Dial("tcp", "logger-service:5000")
+	rpcEndpoint := os.Getenv("RPC_ENDPOINT")
+	client, err := rpc.Dial("tcp", rpcEndpoint)
 	if err != nil {
 		log.Fatal("Connection error: ", err)
 	}

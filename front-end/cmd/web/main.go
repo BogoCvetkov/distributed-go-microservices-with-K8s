@@ -5,11 +5,24 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 )
+
+type TempUrlMap struct {
+	MailGRPC string
+	Mail     string
+	Log      string
+	Auth     string
+	Broker   string
+}
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		render(w, "test.page.gohtml")
+	})
+
+	http.HandleFunc("/hidden", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("This route is hidden and should not be exposed outside of the k8s kluster"))
 	})
 
 	fmt.Println("Starting front end service on port 80")
@@ -40,7 +53,11 @@ func render(w http.ResponseWriter, t string) {
 		return
 	}
 
-	if err := tmpl.Execute(w, nil); err != nil {
+	data := TempUrlMap{
+		Broker: os.Getenv("BROKER_ENDPOINT"),
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

@@ -10,6 +10,7 @@
                  <a id="authBrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Auth</a>
                 <a id="logBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Log</a>
                 <a id="mailBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Mail</a>
+                <a id="mailgRPCBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Mail --> gRPC</a>
 
                 <div id="output" class="mt-5" style="outline: 1px solid silver; padding: 2em;">
                     <span class="text-muted">Output shows here...</span>
@@ -42,6 +43,43 @@
     let sent = document.getElementById("payload");
     let recevied = document.getElementById("received");
     let mailBtn = document.getElementById("mailBtn");
+    let mailgRPCBtn = document.getElementById("mailgRPCBtn");
+
+     mailgRPCBtn.addEventListener("click", function() {
+
+        const payload = {
+            action: "send-grpc",
+            payload: {
+                to: "you@grpc.com",
+                subject: "Test email using gRPC",
+                message: "Hello gRPC world!",
+            }
+        }
+
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+
+        const body = {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: headers,
+        }
+
+        fetch("{{ .Broker }}/route", body)
+        .then((response) => response.json())
+        .then((data) => {
+            sent.innerHTML = JSON.stringify(payload, undefined, 4);
+            received.innerHTML = JSON.stringify(data, undefined, 4);
+            if (data.error) {
+                output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
+            } else {
+                output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`;
+            }
+        })
+        .catch((error) => {
+            output.innerHTML += "<br><br>Eror: " + error;
+        })
+    })
 
      mailBtn.addEventListener("click", function() {
 
@@ -63,7 +101,7 @@
             headers: headers,
         }
 
-        fetch("http:\/\/localhost:3000/route", body)
+        fetch("{{ .Broker }}/route", body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -97,7 +135,7 @@
             headers: headers,
         }
 
-        fetch("http:\/\/localhost:3000/route", body)
+        fetch("{{ .Broker }}/route", body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -132,7 +170,7 @@
             headers: headers,
         }
         console.log(body)
-        fetch("http:\/\/localhost:3000/route", body)
+        fetch("{{ .Broker }}/route", body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -154,7 +192,7 @@
             method: 'POST',
         }
 
-        fetch("http:\/\/localhost:3000", body)
+        fetch("{{ .Broker }}/", body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML ="empty post request";

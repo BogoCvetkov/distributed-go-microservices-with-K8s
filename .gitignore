@@ -1,4 +1,8 @@
 *.env
 *.work
+# k8s secrets
+*-secret.yaml
+# Cluster Visualizer - used locally for development
+diagram
 
 db-data

@@ -96,7 +96,7 @@ func connectRabbitMQ() (*amqp.Connection, error) {
 func initGrpcClient() (*grpc.ClientConn, email_proto.EmailServiceClient) {
 	var conn *grpc.ClientConn
 
-	conn, err := grpc.Dial(os.Getenv("EMAIL_GRPC"), grpc.WithInsecure())
+	conn, err := grpc.Dial(os.Getenv("EMAIL_GRPC"), grpc.WithInsecure(), grpc.WithBlock())
 
 	if err != nil {
 		log.Fatalf("did not connect to EMAIL_GRPC Server: %s", err)

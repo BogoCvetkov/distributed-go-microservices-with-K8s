@@ -7,6 +7,7 @@ import (
 	"broker-service/cmd/api/types"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"golang.org/x/net/context"
@@ -43,7 +44,9 @@ func RouteRequest(app *config.AppConfig) http.HandlerFunc {
 			log(w, r, &payload)
 			return
 		case "send":
-			// send(w, r, &payload, app)
+			send(w, r, &payload, app)
+			return
+		case "send-grpc":
 			sendgRPC(w, r, &payload, app)
 			return
 		default:
@@ -74,7 +77,7 @@ func authenticate(w http.ResponseWriter, r *http.Request, data *types.RouteReque
 
 	reqInfo := types.MethodCallInfo{
 		Method:   "POST",
-		Endpoint: "http://auth-service:3001/auth",
+		Endpoint: fmt.Sprintf("%s/auth", os.Getenv("AUTH_ENDPOINT")),
 		Body:     payload,
 	}
 
@@ -99,10 +102,9 @@ func log(w http.ResponseWriter, r *http.Request, data *types.RouteRequestBody) {
 		Name: dataMap["event_name"].(string),
 		Data: dataMap["data"].(string),
 	}
-
 	reqInfo := types.MethodCallInfo{
 		Method:   "POST",
-		Endpoint: "http://logger-service:3002/create-log",
+		Endpoint: fmt.Sprintf("%s/create-log", os.Getenv("LOGGER_ENDPOINT")),
 		Body:     payload,
 	}
 
@@ -130,7 +132,7 @@ func sendgRPC(w http.ResponseWriter, r *http.Request, data *types.RouteRequestBo
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	gres, err := app.GClient.SendEmail(ctx, &gRequest)
@@ -168,9 +170,8 @@ func send(w http.ResponseWriter, r *http.Request, data *types.RouteRequestBody, 
 		Subject: dataMap["subject"].(string),
 		Message: dataMap["message"].(string),
 	}
-
 	payload := types.RabbitPayload{
-		Endpoint: "http://email-service:3003/send",
+		Endpoint: fmt.Sprintf("%s/send", os.Getenv("EMAIL_ENDPOINT")),
 		Method:   "POST",
 		Data:     d,
 	}
