@@ -12,10 +12,10 @@ This project has the task of achieving 3 specific goals:
 
 2. **Inter-Process Communication Patterns:** The project explores different types of inter-process communication patterns commonly used in microservices. It delves into the specifics, use cases, drawbacks, and performance of the following communication patterns:
 
-- Standard JSON-based communication format
--  Go-based pure RPC communication
-- gRPC communication with protobuf files
-- Communication through a message broker, specifically RabbitMQ using the AMQP protocol
+    - Standard JSON-based communication format
+    -  Go-based pure RPC communication
+    - gRPC communication with protobuf files
+    - Communication through a message broker, specifically RabbitMQ using the AMQP protocol
 
 3. **Distributed Deployment with Kubernetes:** The microservices are deployed in a distributed environment using Docker containers and Kubernetes. This allows for testing the functionality and performance of the microservices within a cluster and assessing how the different communication channels perform in this setup.
 
