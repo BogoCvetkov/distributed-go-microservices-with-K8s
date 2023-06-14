@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-srv
+spec:
+  selector:
+    module-name: frontend-module
+  # type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      module-name: frontend-module
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        module-name: frontend-module
+    spec:
+      containers:
+      - image: go_microservices-frontend-service:latest
+        name: frontend-image
+        # Testing with locally build images
+        imagePullPolicy: Never
+        securityContext:
+          runAsUser: 1001
+          runAsNonRoot: true
+        ports:
+          - containerPort: 80
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+           limits:
+              cpu: 200m
+              memory: 150Mi
+           requests:
+              cpu: 100m
+              memory: 100Mi
+        env:
+          - name: BROKER_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                  name: frontend-secret
+                  key: BROKER_ENDPOINT

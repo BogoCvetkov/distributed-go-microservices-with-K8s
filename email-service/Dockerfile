@@ -21,6 +21,10 @@ WORKDIR /app
 COPY --from=builder /app/cmd/api/build/email-build /app
 COPY --from=builder /app/cmd/api/service/templates  /app/templates
 
+# Don't run as root
+RUN adduser -D -u 1001 bogo
+RUN chown -R bogo:bogo /app
+USER bogo
 
 EXPOSE 3003
 

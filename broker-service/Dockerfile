@@ -20,6 +20,11 @@ WORKDIR /app
 
 COPY --from=builder /app/cmd/api/build/broker-build /app
 
+# Don't run as root
+RUN adduser -D -u 1001 bogo
+RUN chown -R bogo:bogo /app
+USER bogo
+
 EXPOSE 3000
 
 CMD ["./broker-build"]

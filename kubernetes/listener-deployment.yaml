@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: listener-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      module-name: listener-module
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        module-name: listener-module
+    spec:
+      containers:
+      - image: go_microservices-listener-service:latest
+        name: listener-image
+        # Testing with locally build images
+        imagePullPolicy: Never
+        securityContext:
+          runAsUser: 1001
+          runAsNonRoot: true
+        # ports:
+        #   - containerPort: 3001
+        #     protocol: TCP
+        resources:
+           limits:
+              cpu: 200m
+              memory: 150Mi
+           requests:
+              cpu: 100m
+              memory: 100Mi
+        env:
+          - name: RABBIT_URL
+            valueFrom:
+              secretKeyRef:
+                  name: listener-secret
+                  key: RABBIT_URL

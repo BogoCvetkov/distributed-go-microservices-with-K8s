@@ -20,6 +20,10 @@ WORKDIR /app
 
 COPY --from=builder /app/cmd/api/build/logger-build /app
 
+# Don't run as root
+RUN adduser -D -u 1001 bogo
+RUN chown -R bogo:bogo /app
+USER bogo
 
 EXPOSE 3002
 

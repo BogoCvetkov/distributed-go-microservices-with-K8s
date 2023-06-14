@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker-srv
+spec:
+  selector:
+    module-name: broker-module
+  # type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broker-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      module-name: broker-module
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        module-name: broker-module
+    spec:
+      containers:
+      - image: go_microservices-broker-service:latest
+        name: broker-image
+        # Testing with locally build images
+        imagePullPolicy: Never
+        securityContext:
+          runAsUser: 1001
+          runAsNonRoot: true
+        ports:
+          - containerPort: 3000
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+           limits:
+              cpu: 200m
+              memory: 150Mi
+           requests:
+              cpu: 100m
+              memory: 100Mi
+        env:
+          - name: RABBIT_URL
+            valueFrom:
+              secretKeyRef:
+                  name: broker-secret
+                  key: RABBIT_URL
+          - name: EMAIL_GRPC
+            valueFrom:
+              secretKeyRef:
+                  name: broker-secret
+                  key: EMAIL_GRPC
+          - name: AUTH_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                  name: broker-secret
+                  key: AUTH_ENDPOINT
+          - name: LOGGER_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                  name: broker-secret
+                  key: LOGGER_ENDPOINT
+          - name: EMAIL_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                  name: broker-secret
+                  key: EMAIL_ENDPOINT

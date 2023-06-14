@@ -20,4 +20,9 @@ WORKDIR /app
 
 COPY --from=builder /app/cmd/build/listener-build /app
 
+# Don't run as root
+RUN adduser -D -u 1001 bogo
+RUN chown -R bogo:bogo /app
+USER bogo
+
 CMD ["./listener-build"]
