@@ -51,3 +51,8 @@ The Kubernetes architecture for the project includes the following components:
 3. **Secrets:** Secrets are used to securely store sensitive information, such as passwords, API keys, and certificates. Each microservice has its own secret to manage and protect its specific credentials and configuration.
 
 4. **Ingress Controllers:** Two Ingress controllers are employed in the architecture. The first Ingress controller is responsible for exposing the frontend (FE) service at the root path ("/") and the Broker service at the "/api" path. All other microservices are internal and not exposed to the outside world. The second Ingress controller is used to expose the UI Monitoring Dashboards for RabbitMQ (rabbit.localhost) and MailHog (mailhog.localhost). This allows easy access to monitoring and administration interfaces for these components.
+
+
+## K8s Cluster Diagram
+
+![Architecture Diagram](./cluster.png)
