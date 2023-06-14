@@ -1,5 +1,7 @@
 # Building Distributed Microservices in Go with Kubernetes
 
+![Architecture Diagram](./cluster.png)
+
 This repository contains a Go-based microservices project that focuses on exploring various aspects of microservice architecture and distributed deployment using Kubernetes. The project aims to achieve the following goals:
 
 ### Goals
