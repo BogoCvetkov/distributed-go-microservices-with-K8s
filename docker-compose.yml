@@ -145,3 +145,4 @@ volumes:
     driver: local
   rabbit-driver:
     driver: local
+    
