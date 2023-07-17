@@ -29,7 +29,7 @@ The architecture of the project consists of the following components:
 
 3. **Email Service:** Listens on both HTTP and gRPC and uses a local MailHog instance as a development SMTP server. It handles the sending of emails for the application.
 
-4. **Listener Service:** Consumes messages from a RabbitMQ queue. It acts as a router, receiving messages that include an endpoint (microservice) and corresponding data. The Listener service then calls the appropriate microservice based on the endpoint.
+4. **Listener Service:** Consumes messages from a RabbitMQ queue. It acts as a router, receiving messages that include an endpoint(microservice) and corresponding data. The Listener service then calls the appropriate microservice based on the endpoint.
 
 5. **Broker Service:** This service acts as a gateway to all other microservices within the architecture. It communicates internally with other microservices, providing various functionalities. It can authenticate users by calling the Auth microservice via HTTP, log data by calling the Logger service via HTTP, send messages to RabbitMQ for further processing, and send emails by directly sending data to the Email service via gRPC.
 
